@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <title>소방 법규 랜덤 퀴즈</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --text: #1b2430;
+      --muted: #667085;
+      --border: #d8dee9;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --correct: #16803c;
+      --correct-bg: #eaf8ef;
+      --wrong: #c62828;
+      --wrong-bg: #fff0f0;
+      --choice-hover: #f2f6ff;
+      --shadow: 0 18px 55px rgba(15, 23, 42, 0.10);
+      --radius: 18px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --panel: #172033;
+        --text: #f3f4f6;
+        --muted: #aab3c2;
+        --border: #344054;
+        --accent: #60a5fa;
+        --accent-hover: #93c5fd;
+        --correct: #73dc97;
+        --correct-bg: #163524;
+        --wrong: #ff9090;
+        --wrong-bg: #432020;
+        --choice-hover: #202c43;
+        --shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family:
+        Pretendard, "Noto Sans KR", "Apple SD Gothic Neo",
+        "Malgun Gothic", system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.10), transparent 28rem),
+        var(--bg);
+      color: var(--text);
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .page {
+      width: min(920px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 34px 0 max(34px, env(safe-area-inset-bottom));
+    }
+
+    .header {
+      margin-bottom: 16px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(24px, 5vw, 36px);
+      line-height: 1.2;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 18px 0 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 6px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--panel) 90%, transparent);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .card {
+      padding: clamp(18px, 4vw, 30px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .question-label {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+
+    .question {
+      margin: 0;
+      font-size: clamp(20px, 4vw, 28px);
+      line-height: 1.5;
+      letter-spacing: -0.03em;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 11px;
+      margin-top: 24px;
+    }
+
+    .choice {
+      width: 100%;
+      min-height: 64px;
+      padding: 15px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      text-align: left;
+      color: var(--text);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      cursor: pointer;
+      transition:
+        transform .12s ease,
+        border-color .12s ease,
+        background-color .12s ease;
+    }
+
+    .choice:hover:not(:disabled) {
+      background: var(--choice-hover);
+      border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+      transform: translateY(-1px);
+    }
+
+    .choice:focus-visible,
+    .next-btn:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--accent) 38%, transparent);
+      outline-offset: 2px;
+    }
+
+    .choice:disabled {
+      cursor: default;
+    }
+
+    .choice-number {
+      flex: 0 0 auto;
+      display: inline-grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      background: color-mix(in srgb, var(--border) 50%, transparent);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .choice-text {
+      padding-top: 2px;
+      font-size: clamp(15px, 3vw, 17px);
+      line-height: 1.55;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    .choice.correct {
+      border-color: var(--correct);
+      background: var(--correct-bg);
+    }
+
+    .choice.correct .choice-number {
+      background: var(--correct);
+      color: white;
+    }
+
+    .choice.wrong {
+      border-color: var(--wrong);
+      background: var(--wrong-bg);
+    }
+
+    .choice.wrong .choice-number {
+      background: var(--wrong);
+      color: white;
+    }
+
+    .feedback {
+      display: none;
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .feedback.show {
+      display: block;
+    }
+
+    .feedback.correct {
+      color: var(--correct);
+      background: var(--correct-bg);
+      border: 1px solid color-mix(in srgb, var(--correct) 45%, var(--border));
+    }
+
+    .feedback.wrong {
+      color: var(--wrong);
+      background: var(--wrong-bg);
+      border: 1px solid color-mix(in srgb, var(--wrong) 45%, var(--border));
+    }
+
+    .answer-detail {
+      margin-top: 6px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 18px;
+    }
+
+    .next-btn {
+      display: none;
+      min-height: 48px;
+      padding: 12px 20px;
+      border: 0;
+      border-radius: 12px;
+      color: #fff;
+      background: var(--accent);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .next-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .next-btn.show {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stats {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: right;
+    }
+
+    @media (max-width: 560px) {
+      .page {
+        width: min(100% - 18px, 920px);
+        padding-top: 16px;
+      }
+
+      .card {
+        border-radius: 15px;
+      }
+
+      .choice {
+        min-height: 60px;
+        padding: 13px;
+      }
+
+      .actions {
+        display: block;
+      }
+
+      .next-btn {
+        width: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <h1 class="title">소방 법규 랜덤 퀴즈</h1>
+      <p class="subtitle">유형 0 · 유형 1 문제가 무작위로 출제됩니다.</p>
+    </header>
+
+    <div class="status-bar" aria-label="현재 문제 정보">
+      <span class="badge" id="typeBadge">문제 유형</span>
+      <span class="badge" id="countBadge">0문제 풀이</span>
+      <span class="badge" id="scoreBadge">정답률 0%</span>
+    </div>
+
+    <section class="card" aria-live="polite">
+      <p class="question-label">문제</p>
+      <h2 class="question" id="questionText"></h2>
+
+      <div class="choices" id="choices"></div>
+
+      <div class="feedback" id="feedback" role="status"></div>
+
+      <div class="actions">
+        <button class="next-btn" id="nextButton" type="button">
+          다음 문제
+        </button>
+      </div>
+    </section>
+
+    <div class="stats" id="statsText">맞힌 문제 0 / 푼 문제 0</div>
+  </main>
+
+  <script>
+    "use strict";
+
+    /*
+      ============================
+      1. 문제 데이터
+      ============================
+
+    */
+
+    // 유형 0: Key = 문제, Value = 정답
+    const PROBLEM_TYPE_0 = {
+      "소방시설 폐쇄·차단 행위자(사망)": "소방시설법/10년/1억 이하 벌금",
+      "소방시설 폐쇄·차단 행위자(상해)": "소방시설법/7년/7천 이하 벌금",
+      "위력·폭행(협박)으로 화재진압 및 인명구조(구급활동) 방해": "소방기본법/5년/5천 이하 벌금",
+      "고의로 소방대 출입 방해, 소방차 출동 방해": "소방기본법/5년/5천 이하 벌금",
+      "장비파손": "소방기본법/5년/5천 이하 벌금",
+      "인명구출 및 화재진압(번지지 않게 하는 일)을 방해": "소방기본법/5년/5천 이하 벌금",
+      "정당한 사유없이 소방용수시설 또는 비상소화장치 사용하거나 효용을 해치거나 사용 방해": "소방기본법/5년/5천 이하 벌금",
+      "소방대상물 또는 토지의 강제처분 방해(사유 없이 그 처분에 따르지 않음)": "소방기본법/3년/3천 이하 벌금",
+      "화재안전조사 결과에 따른 조치명령 위반": "예방 및 안전관리법/3년/3천 이하 벌금",
+      "화재예방안전진단 결과 보수·보강 등의 조치명령 위반": "예방 및 안전관리법/3년/3천 이하 벌금",
+      "소방시설이 기준에 따라 설치·관리가 안 됐을 때 관계인에게 필요한(요구되는) 조치명령을 위반": "소방시설법/3년/3천 이하 벌금",
+      "유지·관리를 위한 조치명령 위반": "소방시설법/3년/3천 이하 벌금",
+      "자체점검 결과에 따른 이행계획을 완료하지 않아 조치의 이행 명령을 했지만 이를 위반한 자": "소방시설법/3년/3천 이하 벌금",
+      "소방안전관리자 자격증을 타인에게 빌려주거나 빌리거나 이를 알선한 자": "예방 및 안전관리법/1년/1천 이하 벌금",
+      "화재예방안전진단을 받지 않음": "예방 및 안전관리법/1년/1천 이하 벌금",
+      "점검 미실시": "소방시설법/1년/1천 이하 벌금",
+      "화재안전조사를 거부·방해, 기피": "예방 및 안전관리법/300 이하 벌금",
+      "화재예방 조치명령을 따르지 않거나 방해": "예방 및 안전관리법/300 이하 벌금",
+      "(총괄)소방안전관리(보조)자 미선임": "예방 및 안전관리법/300 이하 벌금",
+      "법령을 위반한 것을 발견하고도 조치를 요구하지 않은 소방안전관리자": "예방 및 안전관리법/300 이하 벌금",
+      "조치를 요구한 소방안전관리자에게 불이익준 관계인": "예방 및 안전관리법/300 이하 벌금",
+      "자체점검 결과 소화펌프 고장 등 중대한 위반사항이 발견된 경우 필요한 조치를 하지 않은 관계인": "소방시설법/300 이하 벌금",
+      "자체점검 결과 소화펌프 고장 등 중대위반사항을 관계인에게 알리지 않은 관리업자": "소방시설법/300 이하 벌금",
+      "생활안전활동 방해": "소방기본법/100 이하 벌금",
+      "소방대 도착 전까지 인명 구출 및 화재진압 등 조치하지 않은 관계인": "소방기본법/100 이하 벌금",
+      "피난명령 위반, 긴급조치 방해": "소방기본법/100 이하 벌금",
+      "물·수도 개폐장치의 사용 또는 조작 방해": "소방기본법/100 이하 벌금",
+      "화재·구조·구급이 필요한 상황을 거짓으로 알림": "소방기본법/500 이하 과태료",
+      "화재예방조치를 위반한 화기 취급자": "예방 및 안전관리법/300 이하 과태료",
+      "소방안전관리자를 겸한 자(겸직)": "예방 및 안전관리법/300 이하 과태료",
+      "건설현장 소방안전관리 업무 이행하지 않음": "예방 및 안전관리법/300 이하 과태료",
+      "소방안전관리업무 안한 관계인 또는 소방안전관리자": "예방 및 안전관리법/300 이하 과태료",
+      "피난정보 미제공, 소방훈련 및 교육 하지 않음": "예방 및 안전관리법/300 이하 과태료",
+      "화재예방안전진단결과 미제출":"예방 및 안전관리법/300 이하 과태료",
+      "소방시설을 화재안전기준에 따라 설치·관리하지 않음": "소방시설법/300 이하 과태료",
+      "공사현장에 임시소방시설을 설치·관리하지 않음": "소방시설법/300 이하 과태료",
+      "관계인에게 점검 결과를 제출 하지 않은 관리업자 등": "소방시설법/300 이하 과태료",
+      "피난·방화시설(구획)을 폐쇄·훼손·변경함": "소방시설법/300 이하 과태료",
+      "점검기록표 기록X 또는 쉽게 볼 수 있는 장소에 게시하지 않은 관계인": "소방시설법/300 이하 과태료",
+      "점검결과를 보고하지 않거나 거짓으로 보고한 관계인": "소방시설법/300 이하 과태료",
+      "자체점검 이행계획을 기간 내에 완료하지 않거나 이행계획 완료 결과 미보고 또는 거짓 보고한 관계인": "소방시설법/300 이하 과태료",
+      "소방차 출동에 '지장'을 줌": "소방기본법/200 이하 과태료",
+      "소방활동구역에 출입": "소방기본법/200 이하 과태료",
+      "안전원 사칭": "소방기본법/200 이하 과태료",
+      "선임 '신고'를 하지 않음": "예방 및 안전관리법/200 이하 과태료",
+      "소방안전관리자 성명 등을 게시하지 않음": "예방 및 안전관리법/200 이하 과태료",
+      "소방차 전용구역에 주차": "소방기본법/100 이하 과태료",
+      "소방차 전용구역으로의 진입을 가로막음": "소방기본법/100 이하 과태료",
+      "실무교육 받지 않은 소방안전관리(보조)자": "예방 및 안전관리법/50 이하 과태료",
+      "다음의 장소(생략)에서 화재로 오인할 수 있는 불을 피우거나 연막소독을 하기 전 미리 신고를 하지 않아서 소방차가 출동하게 함": "소방기본법/20 이하 과태료",
+    };
+
+    // 유형 0의 오답 후보
+    const PROBLEM_TYPE_INCORRECT = [
+      "소방시설법/10년/1억 이하 벌금",
+      "소방시설법/7년/7천 이하 벌금",
+      "소방기본법/5년/5천 이하 벌금",
+      "소방기본법/3년/3천 이하 벌금",
+      "예방 및 안전관리법/3년/3천 이하 벌금",
+      "소방시설법/3년/3천 이하 벌금",
+      "예방 및 안전관리법/1년/1천 이하 벌금",
+      "소방시설법/1년/1천 이하 벌금",
+      "예방 및 안전관리법/300 이하 벌금",
+      "소방시설법/300 이하 벌금",
+      "소방기본법/100 이하 벌금",
+      "소방기본법/500 이하 과태료",
+      "예방 및 안전관리법/300 이하 과태료",
+      "소방시설법/300 이하 과태료",
+      "소방기본법/200 이하 과태료",
+      "예방 및 안전관리법/200 이하 과태료",
+      "소방기본법/100 이하 과태료",
+      "예방 및 안전관리법/50 이하 과태료",
+      "소방기본법/20 이하 과태료"
+    ];
+
+    // 유형 1: Key = 문제, Value[0] = 정답, 나머지 = 오답
+    const PROBLEM_TYPE_1 = {
+      "건설현장 소방안전관리 업무 이행하지 않음": [
+        "1차: 100, 2차: 200, 3차: 300",
+      	"1차: 50, 2차: 100, 3차: 200",
+      	"1차: 100, 2차: 300, 3차: 500",
+      	"1차: 100, 2차: 150, 3차: 300",
+      ],
+      "피난·방화시설(구획)을 폐쇄·훼손·변경함": [
+        "1차: 100, 2차: 200, 3차: 300",
+      	"1차: 50, 2차: 100, 3차: 200",
+      	"1차: 100, 2차: 300, 3차: 500",
+      	"1차: 100, 2차: 150, 3차: 300",
+      ], 
+      "점검기록표 기록 X 또는 쉽게 볼 수 있는 장소에 게시하지 않은 관계인": [
+        "1차: 100, 2차: 200, 3차: 300",
+      	"1차: 50, 2차: 100, 3차: 200",
+      	"1차: 100, 2차: 300, 3차: 500",
+      	"1차: 100, 2차: 150, 3차: 300",
+      ],
+      "점검결과를 보고하지 않거나 거짓으로 보고한 관계인": [
+        "지연 10일 미만: 50, 1개월 미만: 100, 1개월 이상/미보고: 200, 거짓 보고: 300",
+      	"지연 10일 미만: 100, 1개월 미만: 200, 1개월 이상/미보고: 300, 거짓 보고: 500",
+      	"지연 10일 미만: 150, 1개월 미만: 250, 1개월 이상/미보고: 350, 거짓 보고: 500",
+      	"지연 7일 미만: 50, 1개월 미만: 100, 1개월 이상/미보고: 300, 거짓 보고: 500",
+      ],
+      "자체점검 이행계획을 기간 내에 완료하지 않거나 이행 계획 완료 결과 미보고 또는 거짓보고한 관계인":  [
+        "지연 10일 미만: 50, 1개월 미만: 100, 1개월 이상/미보고: 200, 거짓 보고: 300",
+      	"지연 10일 미만: 100, 1개월 미만: 200, 1개월 이상/미보고: 300, 거짓 보고: 500",
+      	"지연 10일 미만: 150, 1개월 미만: 250, 1개월 이상/미보고: 350, 거짓 보고: 500",
+      	"지연 7일 미만: 50, 1개월 미만: 100, 1개월 이상/미보고: 300, 거짓 보고: 500",
+      ],
+      "선임 '신고'를 하지 않음": [
+        "1개월 미만: 50, 3개월 미만: 100, 3개월 이상 또는 미신고: 200",
+      	"1개월 미만: 100, 3개월 미만: 200, 3개월 이상 또는 미신고: 300",
+      	"1개월 미만: 50, 5개월 미만: 100, 5개월 이상 또는 미신고: 300",
+      	"14일 미만: 50, 1개월 미만: 100, 1개월 이상 또는 미신고: 200",
+      ]
+    };
+
+    /*
+      ============================
+      2. 프로그램 로직
+      ============================
+    */
+
+    const questionText = document.getElementById("questionText");
+    const choicesEl = document.getElementById("choices");
+    const feedbackEl = document.getElementById("feedback");
+    const nextButton = document.getElementById("nextButton");
+    const typeBadge = document.getElementById("typeBadge");
+    const countBadge = document.getElementById("countBadge");
+    const scoreBadge = document.getElementById("scoreBadge");
+    const statsText = document.getElementById("statsText");
+
+    let currentAnswer = "";
+    let answered = false;
+    let totalCount = 0;
+    let correctCount = 0;
+
+    // 바로 직전에 나온 문제를 저장하여, 가능하면 연속 중복 출제를 피함
+    let previousProblemId = null;
+
+    function shuffle(array) {
+      const result = [...array];
+
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+
+      return result;
+    }
+
+    function randomItem(array) {
+      return array[Math.floor(Math.random() * array.length)];
+    }
+
+    function unique(array) {
+      return [...new Set(array)];
+    }
+
+    function getType0Question() {
+      const entries = Object.entries(PROBLEM_TYPE_0);
+
+      if (entries.length === 0) {
+        return null;
+      }
+
+      const candidates = entries.map(([question, answer]) => ({
+        id: `0:${question}`,
+        type: 0,
+        question,
+        answer
+      }));
+
+      let pool = candidates.filter(item => item.id !== previousProblemId);
+      if (pool.length === 0) pool = candidates;
+
+      const selected = randomItem(pool);
+
+      // 오답 후보에서 현재 정답과 같은 항목은 반드시 제거한다.
+      const wrongPool = unique(PROBLEM_TYPE_INCORRECT)
+        .filter(item => item !== selected.answer);
+
+      if (wrongPool.length < 3) {
+        throw new Error(
+          "PROBLEM_TYPE_INCORRECT에 현재 정답과 다른 오답 후보가 최소 3개 필요합니다."
+        );
+      }
+
+      const wrongChoices = shuffle(wrongPool).slice(0, 3);
+      const choices = shuffle([selected.answer, ...wrongChoices]);
+
+      return {
+        ...selected,
+        choices
+      };
+    }
+
+    function getType1Question() {
+      const entries = Object.entries(PROBLEM_TYPE_1);
+
+      if (entries.length === 0) {
+        return null;
+      }
+
+      const candidates = entries
+        .filter(([, answers]) => Array.isArray(answers) && answers.length >= 4)
+        .map(([question, answers]) => ({
+          id: `1:${question}`,
+          type: 1,
+          question,
+          answer: answers[0],
+          choices: shuffle(answers)
+        }));
+
+      if (candidates.length === 0) {
+        return null;
+      }
+
+      let pool = candidates.filter(item => item.id !== previousProblemId);
+      if (pool.length === 0) pool = candidates;
+
+      return randomItem(pool);
+    }
+
+    function createQuestion() {
+      answered = false;
+      feedbackEl.className = "feedback";
+      feedbackEl.innerHTML = "";
+      nextButton.classList.remove("show");
+      choicesEl.innerHTML = "";
+
+      const hasType0 = Object.keys(PROBLEM_TYPE_0).length > 0;
+      const hasType1 = Object.keys(PROBLEM_TYPE_1).length > 0;
+
+      let availableTypes = [];
+      if (hasType0) availableTypes.push(0);
+      if (hasType1) availableTypes.push(1);
+
+      if (availableTypes.length === 0) {
+        questionText.textContent = "등록된 문제가 없습니다.";
+        typeBadge.textContent = "문제 없음";
+        return;
+      }
+
+      // 유형 0 / 유형 1을 같은 확률로 선택
+      const selectedType = randomItem(availableTypes);
+
+      let problem = selectedType === 0
+        ? getType0Question()
+        : getType1Question();
+
+      // 특정 유형의 데이터 구성이 잘못되었을 경우 가능한 다른 유형으로 한 번 대체
+      if (!problem) {
+        problem = selectedType === 0
+          ? getType1Question()
+          : getType0Question();
+      }
+
+      if (!problem) {
+        questionText.textContent = "출제 가능한 문제가 없습니다.";
+        typeBadge.textContent = "문제 없음";
+        return;
+      }
+
+      previousProblemId = problem.id;
+      currentAnswer = problem.answer;
+
+      typeBadge.textContent = `유형 ${problem.type}`;
+      questionText.textContent = problem.question;
+
+      problem.choices.forEach((choiceText, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "choice";
+        button.dataset.value = choiceText;
+
+        const number = document.createElement("span");
+        number.className = "choice-number";
+        number.textContent = index + 1;
+
+        const text = document.createElement("span");
+        text.className = "choice-text";
+        text.textContent = choiceText;
+
+        button.append(number, text);
+        button.addEventListener("click", () => checkAnswer(button, choiceText));
+
+        choicesEl.appendChild(button);
+      });
+    }
+
+    function checkAnswer(selectedButton, selectedValue) {
+      if (answered) return;
+
+      answered = true;
+      totalCount += 1;
+
+      const isCorrect = selectedValue === currentAnswer;
+
+      if (isCorrect) {
+        correctCount += 1;
+        selectedButton.classList.add("correct");
+
+        feedbackEl.className = "feedback correct show";
+        feedbackEl.innerHTML = `
+          <div>정답입니다. ✓</div>
+        `;
+      } else {
+        selectedButton.classList.add("wrong");
+
+        // 오답을 골랐을 때 정답 선택지도 같이 강조
+        for (const button of choicesEl.querySelectorAll(".choice")) {
+          if (button.dataset.value === currentAnswer) {
+            button.classList.add("correct");
+          }
+        }
+
+        feedbackEl.className = "feedback wrong show";
+
+        const title = document.createElement("div");
+        title.textContent = "오답입니다. ✕";
+
+        const detail = document.createElement("div");
+        detail.className = "answer-detail";
+        detail.textContent = `정답: ${currentAnswer}`;
+
+        feedbackEl.replaceChildren(title, detail);
+      }
+
+      // 한 번 선택한 뒤에는 모든 선택지를 잠근다.
+      for (const button of choicesEl.querySelectorAll(".choice")) {
+        button.disabled = true;
+      }
+
+      updateStats();
+      nextButton.classList.add("show");
+      nextButton.focus({ preventScroll: true });
+    }
+
+    function updateStats() {
+      const rate = totalCount === 0
+        ? 0
+        : Math.round((correctCount / totalCount) * 100);
+
+      countBadge.textContent = `${totalCount}문제 풀이`;
+      scoreBadge.textContent = `정답률 ${rate}%`;
+      statsText.textContent = `맞힌 문제 ${correctCount} / 푼 문제 ${totalCount}`;
+    }
+
+    nextButton.addEventListener("click", () => {
+      createQuestion();
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    });
+
+    // 숫자키 1~4로 선택 가능
+    window.addEventListener("keydown", event => {
+      if (answered) return;
+
+      if (["1", "2", "3", "4"].includes(event.key)) {
+        const index = Number(event.key) - 1;
+        const buttons = choicesEl.querySelectorAll(".choice");
+
+        if (buttons[index]) {
+          buttons[index].click();
+        }
+      }
+    });
+
+    createQuestion();
+  </script>
+</body>
+</html>
