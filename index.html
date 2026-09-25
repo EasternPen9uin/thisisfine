@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="light dark" />
-  <title>소방안전관리자 벌금/과태료 문제풀이</title>
+  <title>소방안전관리자 벌금/과태료 문제풀이v2</title>
   <style>
     :root {
       --bg: #f5f7fb;
@@ -598,9 +598,14 @@
         return;
       }
 
-      // 유형 0 / 유형 1을 같은 확률로 선택
-      const selectedType = randomItem(availableTypes);
-
+      const type0Count = Object.keys(PROBLEM_TYPE_0).length;
+      const type1Count = Object.keys(PROBLEM_TYPE_1).length;
+      const totalProblems = type0Count + type1Count;
+      
+      const random = Math.random() * totalProblems;
+      
+      const selectedType = random < type0Count ? 0 : 1;
+      
       let problem = selectedType === 0
         ? getType0Question()
         : getType1Question();
